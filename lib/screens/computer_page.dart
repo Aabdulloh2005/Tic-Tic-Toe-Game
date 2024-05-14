@@ -1,13 +1,22 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 
-class DesignPage extends StatefulWidget {
-  const DesignPage({Key? key}) : super(key: key);
+void main() {
+  runApp(
+    const MaterialApp(
+      home: ComputerPlaying(),
+    ),
+  );
+}
+
+class ComputerPlaying extends StatefulWidget {
+  const ComputerPlaying({Key? key}) : super(key: key);
 
   @override
   _DesignPageState createState() => _DesignPageState();
 }
 
-class _DesignPageState extends State<DesignPage> {
+class _DesignPageState extends State<ComputerPlaying> {
   late List<String> board;
   late String currentPlayer;
   late int moveCount;
@@ -26,6 +35,10 @@ class _DesignPageState extends State<DesignPage> {
       currentPlayer = 'X';
       moveCount = 0;
     });
+
+    if (currentPlayer == 'O') {
+      computerMove();
+    }
   }
 
   void makeMove(int index) {
@@ -33,15 +46,38 @@ class _DesignPageState extends State<DesignPage> {
       if (board[index].isEmpty) {
         board[index] = currentPlayer;
         moveCount++;
+
+        String? winner = checkWinner();
+        if (winner != null) {
+          showResultDialog(winner);
+          updateWinCount(winner);
+        } else if (moveCount == 9) {
+          showResultDialog('draw');
+        }
+
         currentPlayer = currentPlayer == 'X' ? 'O' : 'X';
+
+        if (currentPlayer == 'O' && winner == null && moveCount < 9) {
+          computerMove();
+        }
+      }
+    });
+  }
+
+  void computerMove() {
+    const Duration delayDuration = Duration(milliseconds: 1500);
+
+    Future.delayed(delayDuration, () {
+      List<int> emptyIndices = [];
+      for (int i = 0; i < board.length; i++) {
+        if (board[i].isEmpty) {
+          emptyIndices.add(i);
+        }
       }
 
-      String? winner = checkWinner();
-      if (winner != null) {
-        showResultDialog(winner);
-        updateWinCount(winner);
-      } else if (moveCount == 9) {
-        showResultDialog('draw');
+      if (emptyIndices.isNotEmpty) {
+        int randomIndex = Random().nextInt(emptyIndices.length);
+        makeMove(emptyIndices[randomIndex]);
       }
     });
   }
@@ -90,33 +126,17 @@ class _DesignPageState extends State<DesignPage> {
     }
 
     showDialog(
-      barrierDismissible: false,
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: const Color(0xff008287),
-        title: const Text(
-          'Game Over',
-          style: TextStyle(
-            color: Color(0xffD9B991),
-            fontSize: 30,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        content: Text(
-          message,
-          style: const TextStyle(
-              color: Colors.white, fontSize: 25, fontWeight: FontWeight.bold),
-        ),
+        title: Text('Game Over'),
+        content: Text(message),
         actions: [
           TextButton(
             onPressed: () {
               Navigator.of(context).pop();
               resetGame();
             },
-            child: const Text(
-              'Play Again',
-              style: TextStyle(color: Color(0xffD9B991), fontSize: 20),
-            ),
+            child: Text('Play Again'),
           ),
         ],
       ),
@@ -128,17 +148,17 @@ class _DesignPageState extends State<DesignPage> {
     return Scaffold(
       backgroundColor: const Color(0xff5A9B9B),
       body: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 40),
+        padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 30),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
             const Column(
               children: [
                 Text(
-                  "Player1:X vs Player2:O",
+                  "Player: X vs AI: O",
                   style: TextStyle(
                     color: Color(0xffD9B991),
-                    fontSize: 30,
+                    fontSize: 28,
                     height: 1,
                   ),
                 ),
@@ -148,34 +168,23 @@ class _DesignPageState extends State<DesignPage> {
                 ),
               ],
             ),
-            Column(
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Text(
-                  "Scores",
+                Text(
+                  'X Wins: $xWins',
                   style: TextStyle(
-                      fontSize: 50,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.white),
+                    color: Colors.white,
+                    fontSize: 20,
+                  ),
                 ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      'Xw  : $xWins',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 22,
-                      ),
-                    ),
-                    const SizedBox(width: 20),
-                    Text(
-                      'Ow  : $oWins',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 22,
-                      ),
-                    ),
-                  ],
+                const SizedBox(width: 20),
+                Text(
+                  'O Wins: $oWins',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 20,
+                  ),
                 ),
               ],
             ),
@@ -190,7 +199,7 @@ class _DesignPageState extends State<DesignPage> {
                   return GetContainer(
                     player: board[index],
                     onTap: () {
-                      if (checkWinner() == null) {
+                      if (currentPlayer == 'X' && checkWinner() == null) {
                         makeMove(index);
                       }
                     },
@@ -211,7 +220,7 @@ class _DesignPageState extends State<DesignPage> {
                     Navigator.pushReplacement(
                       context,
                       MaterialPageRoute(
-                          builder: (context) => const DesignPage()),
+                          builder: (context) => ComputerPlaying()),
                     );
                   },
                 ),
@@ -245,8 +254,8 @@ class GetContainer extends StatelessWidget {
         child: Center(
           child: Text(
             player,
-            style: TextStyle(
-              color: player == "X" ? Colors.white : const Color(0xff015A5F),
+            style: const TextStyle(
+              color: Colors.white,
               fontSize: 60,
               fontWeight: FontWeight.bold,
             ),

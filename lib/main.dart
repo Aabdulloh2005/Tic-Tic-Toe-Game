@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:tic_tac_toe/screens/design.dart';
+import 'package:tic_tac_toe/screens/sign_in.dart';
 
 void main(List<String> args) {
   runApp(const TicTacToe());
@@ -12,7 +13,7 @@ class TicTacToe extends StatelessWidget {
   Widget build(BuildContext context) {
     return const MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: DesignPage(),
+      home: SignIn(),
     );
   }
 }
